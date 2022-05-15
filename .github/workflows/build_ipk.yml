@@ -75,12 +75,12 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
-        #mkdir /work
+        mkdir openwrt
         wget --quiet --continue --show-progress $URL
         [ $? -ne 0 ]&&echo "下载工具链失败!"&&exit 127
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-        cd /workdir/openwrt
-        tar -xvf openwrt-sdk*Linux-x86_64.tar.xz
+        #cd /workdir/openwrt
+        tar -xvf openwrt-sdk*Linux-x86_64.tar.xz -C /workdir/openwrt
         [ $? -ne 0 ]&&echo "解压工具链失败!"&&exit 127
 
     - name: Load custom feeds
