@@ -37,6 +37,8 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
+        echo $GITHUB_WORKSPACE
+        echo "$GITHUB_WORKSPACE/openwrt"
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
         sudo -E apt-get -qq install $(curl -fsSL git.io/depends-ubuntu-2004)
@@ -73,6 +75,7 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
+        #mkdir /work
         wget --quiet --continue --show-progress $URL
         [ $? -ne 0 ]&&echo "下载工具链失败!"&&exit 127
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
