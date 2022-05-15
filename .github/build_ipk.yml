@@ -12,14 +12,14 @@ on:
         default: 'false'
 
 env:
-  REPO_URL: https://downloads.openwrt.org/releases/19.07.8/targets/ath79/nand/openwrt-sdk-19.07.8-ath79-nand_gcc-7.5.0_musl.Linux-x86_64.tar.xz
+  URL: https://downloads.openwrt.org/releases/19.07.8/targets/ath79/nand/openwrt-sdk-19.07.8-ath79-nand_gcc-7.5.0_musl.Linux-x86_64.tar.xz
   REPO_BRANCH: master
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
-  UPLOAD_BIN_DIR: false
-  UPLOAD_FIRMWARE: true
+  UPLOAD_BIN_DIR: true
+  UPLOAD_FIRMWARE: false
   UPLOAD_COWTRANSFER: false
   UPLOAD_WETRANSFER: false
   UPLOAD_RELEASE: false
@@ -45,14 +45,40 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
+     - name: Install UPX
+      run: |
+        cd /tmp
+        latest_version=$(wget -qO- https://api.github.com/repos/upx/upx/releases/latest | grep 'tag_name' | cut -d\" -f4)
+        [ -z ${latest_version} ]&&exit 127
+        wget --quiet --continue --show-progress https://github.com/upx/upx/releases/download/$latest_version/upx-${latest_version:1}-amd64_linux.tar.xz
+        tar xvJf upx*-amd64_linux.tar.xz
+        sudo mv -f upx-*-amd64_linux/upx /usr/local/bin
+        rm -rf upx*
+        
+    - name: Prepare Golang
+      run: |
+        cd /tmp
+        #Download Latest Go
+        echo "Finding latest version of Go for AMD64..."
+        latest_version="$(wget -qO- https://golang.org/dl/|grep 'download downloadBox' | grep -oP '\d+\.\d+(\.\d+)?' | head -n 1)"
+        [ -z ${latest_version} ]&&exit 127
+        echo "Downloading latest Go for AMD64: ${latest_version}"
+        wget --quiet --continue --show-progress https://dl.google.com/go/go${latest_version}.linux-amd64.tar.gz
+        [ $? -ne 0 ]&&echo "下载Golang工具链失败!"&&exit 127
+        sudo tar -C /usr/local -xzf go${latest_version}.linux-amd64.tar.gz
+        [ $? -ne 0 ]&&echo "解压Golang工具链失败!"&&exit 127
+        rm -f go${latest_version}.linux-amd64.tar.gz
 
-    - name: Clone source code
+    - name: Prepare Toolchain
       working-directory: /workdir
       run: |
         df -hT $PWD
-        wget --quiet --continue --show-progress $REPO_URL
+        wget --quiet --continue --show-progress $URL
+        [ $? -ne 0 ]&&echo "下载工具链失败!"&&exit 127
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         tar xvJf openwrt-sdk*Linux-x86_64.tar.xz /workdir/openwrt
+        [ $? -ne 0 ]&&echo "解压工具链失败!"&&exit 127
+
     - name: Load custom feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
@@ -82,16 +108,28 @@ jobs:
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
   
-    - name: Compile the firmware
-      id: compile
+    - name: Build
       run: |
-        cd openwrt
-        echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 || make -j1 V=s
-        echo "::set-output name=status::success"
-        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
-        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
-        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+        # Clone 项目
+        mkdir package/luci-app-openclash
+        cd package/luci-app-openclash
+        git init
+        git remote add -f origin https://github.com/vernesong/OpenClash.git
+        git config core.sparsecheckout true
+        echo "luci-app-openclash" >> .git/info/sparse-checkout
+        git pull --depth 1 origin master
+        git branch --set-upstream-to=origin/master master
+
+        # 编译 po2lmo (如果有po2lmo可跳过)
+        pushd luci-app-openclash/tools/po2lmo
+        make && sudo make install
+        popd
+
+        # 开始编译
+
+        # 先回退到SDK主目录
+        cd ../..
+        make package/luci-app-openclash/luci-app-openclash/compile V=99
 
     - name: Check space usage
       if: (!cancelled())
