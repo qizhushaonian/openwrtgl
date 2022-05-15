@@ -76,16 +76,17 @@ jobs:
       run: |
         df -hT $PWD
         mkdir openwrt
-        wget --quiet --continue --show-progress $URL
+        wget --quiet --continue  $URL
         [ $? -ne 0 ]&&echo "下载工具链失败!"&&exit 127
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         #cd /workdir/openwrt
         tar -xf openwrt-sdk*Linux-x86_64.tar.xz
-        echo "解压结束"
-        #mv openwrt-sdk-19.07.8-ath79-nand_gcc-7.5.0_musl.Linux-x86_64 /workdir/openwrt
-        echo "移动结束"
-        ls openwrt-sdk-19.07.8-ath79-nand_gcc-7.5.0_musl.Linux-x86_64
         [ $? -ne 0 ]&&echo "解压工具链失败!"&&exit 127
+        #echo "解压结束"
+        mv openwrt-sdk-19.07.8-ath79-nand_gcc-7.5.0_musl.Linux-x86_64 /workdir/openwrt
+        #echo "移动结束"
+        #mv openwrt-sdk-19.07.8-ath79-nand_gcc-7.5.0_musl.Linux-x86_64 
+        #[ $? -ne 0 ]&&echo "解压工具链失败!"&&exit 127
 
     - name: Load custom feeds
       run: |
