@@ -66,21 +66,7 @@ jobs:
         #mv openwrt-sdk-19.07.8-ath79-nand_gcc-7.5.0_musl.Linux-x86_64 
         #[ $? -ne 0 ]&&echo "解压工具链失败!"&&exit 127
 
-    - name: Load custom feeds
-      run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF /workdir/openwrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
-        cd /workdir/openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
-
-    - name: Update feeds
-      run: |
-        #pwd
-        cd /workdir/openwrt && ./scripts/feeds update -a
-
-    - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
-
+    
     - name: Load custom configuration
       run: |
         [ -e files ] && mv files openwrt/files
