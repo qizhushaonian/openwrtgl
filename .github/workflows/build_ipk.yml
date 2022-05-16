@@ -87,6 +87,8 @@ jobs:
       run: |
         # Clone 项目
         cd /workdir/openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
         echo CONFIG_ALL=y >.config
         make defconfig
         mkdir package/luci-app-openclash
