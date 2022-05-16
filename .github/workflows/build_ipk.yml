@@ -112,13 +112,18 @@ jobs:
     - name: Check space usage
       if: (!cancelled())
       run: df -hT
-
+    - name: Upload bin2 directory
+      uses: actions/upload-artifact@main
+      if: env.UPLOAD_BIN_DIR == 'true'
+      with:
+        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: /workdir/openwrt/target/linux
     - name: Upload bin directory
       uses: actions/upload-artifact@main
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: /workdir/openwrt/bin
+        path: /workdir/openwrt/target/linux
 
     - name: Organize files
       id: organize
