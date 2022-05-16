@@ -105,7 +105,7 @@ jobs:
         # 先回退到SDK主目录
         cd ../..
         make package/luci-app-openclash/luci-app-openclash/compile V=99
-
+        tar zcvf bin.tar.gz ./bin
     - name: Check space usage
       if: (!cancelled())
       run: df -hT
@@ -120,7 +120,7 @@ jobs:
       if: env.UPLOAD_BIN_DIR == 'true'
       with:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: /workdir/openwrt/target/linux/
+        path: /workdir/openwrt/bin.tar.gz
     - name: Upload bin directory
       uses: actions/upload-artifact@main
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
