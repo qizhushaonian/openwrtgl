@@ -101,6 +101,8 @@ jobs:
       run: |
         # Clone 项目
         cd /workdir/openwrt
+        echo CONFIG_ALL=y >.config
+        make defconfig
         mkdir package/luci-app-openclash
         cd package/luci-app-openclash
         git init
