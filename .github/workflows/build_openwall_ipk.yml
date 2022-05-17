@@ -91,7 +91,8 @@ jobs:
         #svn co https://github.com/openwrt/packages/trunk/libs/libcap ./feeds/packages/libs/libcap
         ./scripts/feeds update -a
         ./scripts/feeds install -a
-        
+        make -j16 download V=s
+        make -j16 V-s
         #tar zcvf bin.tar.gz ./bin
     - name: Check space usage
       if: (!cancelled())
