@@ -1,6 +1,6 @@
 
 
-name: Build IPK
+name: Build passwall IPK
 
 on:
   repository_dispatch:
